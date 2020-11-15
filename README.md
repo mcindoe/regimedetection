@@ -6,7 +6,6 @@ Code not yet ready for review. AZ-Clustering algorithm needs to be cleaned and s
 
 1. Add rest of code in to-add.py and check for inaccuracies
 2. Add examples folder and some examples of using the AZ-Clustering module
-3. Bit more structure to the repo. Rename azran-ghahramani.py -> clustering.py and move utils such as closest-even-integer to a separate utils file.
 
 ## Some Open Issues
 

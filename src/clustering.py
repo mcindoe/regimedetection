@@ -10,6 +10,9 @@ import numpy as np
 import pickle
 import random
 
+from metrics import kl_divergence
+from utils import closest_even_integer
+
 
 def get_space_distances(points, metric):
     '''
@@ -55,15 +58,6 @@ def make_similarities_matrix(points, metric, similarity, distances=None):
         print('WARN: Similarities matrix is not full rank')
 
     return W
-
-
-def kl_divergence(a, b):
-    '''Return the KL-divergence from b to a'''
-    if len(a) != len(b):
-        raise ValueError(f'Expected inputs to kl_divergence to be of the same length, '
-            'got {len(a)} and {len(b)}')
-
-    return (a * np.log(a/b)).sum()
 
 
 def K_prototypes(transition_matrix, prototypes_init):
@@ -168,28 +162,6 @@ def random_init(transition_matrix, n_clusters):
         prototypes[k] = transition_matrix[chosen_rows[k]]
 
     return prototypes
-
-
-def closest_even_integer(x):
-    '''
-    Computes closest even integer to an input float or integer.
-    If x is an integer, the output is x+1 if x is odd else x
-    '''
-    if not isinstance(x, (int, float)):
-        raise ValueError(f'Expected {x} to be an integer or a float')
-
-    if isinstance(x, int):
-        if x%2 == 0:
-            return x
-        return x+1
-
-    lower = floor(x)
-    upper = ceil(x)
-
-    # If the closest integer to x is smaller than x
-    if abs(lower - x) < abs(upper - x):
-        return lower if lower%2 == 0 else upper
-    return upper if upper%2 == 0 else lower
 
 
 def delta_k_t(k, t, eigenvalues):

@@ -107,3 +107,12 @@ def make_mmd_metric(kernel):
 
     return f
 
+
+def kl_divergence(a, b):
+    '''Return the KL-divergence from b to a'''
+    if len(a) != len(b):
+        raise ValueError(f'Expected inputs to kl_divergence to be of the same length, '
+            'got {len(a)} and {len(b)}')
+
+    return (a * np.log(a/b)).sum()
+
