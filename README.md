@@ -6,6 +6,7 @@ Code not yet ready for review. AZ-Clustering algorithm needs to be cleaned and s
 
 1. Add rest of code in to-add.py and check for inaccuracies
 2. Add examples folder and some examples of using the AZ-Clustering module
+3. Reorder functions in clustering.py. Move things to separate modules as necessary
 
 ## Some Open Issues
 
