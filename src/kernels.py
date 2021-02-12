@@ -1,8 +1,8 @@
 from math import exp
 import numpy as np
 
-from metrics import euclid_distance
-from metrics import euclid_squared
+from regimedetection.metrics import euclid_distance
+from regimedetection.metrics import euclid_squared
 
 
 def make_laplacian_kernel(sigma):

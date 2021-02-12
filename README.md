@@ -1,14 +1,15 @@
 # Regime Detection
 
-Code not yet ready for review. AZ-Clustering algorithm needs to be cleaned and some examples introduced. In particular some changes have been made and not checked that the script even works at present.
+Provides an implementation of the AG-Clustering algorithm. More examples to follow shortly.
 
-## TODO
+# Setup
 
-1. Add rest of code in to-add.py and check for inaccuracies
-2. Add examples folder and some examples of using the AZ-Clustering module
-3. Reorder functions in clustering.py. Move things to separate modules as necessary
+* `git pull` the repository to a folder named `regimedetection`
+* Add the `regimedetection` folder to your `PYTHONPATH` environment variable
+    - I refer to modules as e.g. `from regimedetection.src.metrics import euclidean_distance`
+    - Open to suggestions on how to better accomplish this
+* Create a new virtual environment and `pip install -r requirements.txt`
 
-## Some Open Issues
+# Some Open Issues
 
-1. In K-Prototypes algorithm, what are we to do if one of the partitions is empty? E.g. if kth cluster is entry, what is new-prototypes[k]? I suppose this comes up in K-means clustering as well. Currently I'm leaving the partition unchanged.
-2. Verify the claim in 7.2 of the reference. I didn't agree with this when doing the thesis, and will be a major speedup if we can get this working
+1. In K-Prototypes algorithm, what are we to do if one of the partitions is empty? E.g. if kth cluster is entry, what is `new-prototypes[k]`? I suppose this comes up in K-means clustering as well. Currently I'm leaving the partition unchanged.

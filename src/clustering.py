@@ -1,133 +1,254 @@
-'''
-Implementation of the Azran-Ghahramani clustering as outlined in the paper
-"A New Approach to Data Driven Clustering", which is referred to here as
+"""
+Implements the Azran-Ghahramani clustering algorithm outlined in the
+paper "A New Approach to Data Driven Clustering", which we refer to as
 "the paper".
-'''
+"""
 
-from math import ceil
-from math import floor
+import itertools
 import numpy as np
-import pickle
 import random
 
-from metrics import kl_divergence
-from utils import closest_even_integer
+from regimedetection.src.metrics import kl_divergence
+
+from typing import Any
+from typing import Callable
+from typing import Optional
 
 
-def get_space_distances(points, metric):
-    '''
-    Compute distances between all points in a metric space.
+def get_space_distances(
+    points: np.ndarray, metric: Callable[[Any, Any], np.float]
+) -> np.ndarray:
+    """
+    Compute all non-trivial distances between all points in a metric
+    space. I.e. all distances except those of the form d(x,x) which is 0
+    by definition
 
-    Returned as a list of lists. If points contains n elements,
-    the returned list is of length n-1, with the ith entry being
-    a list of the distances from point i to points with indices
-    {i+1, i+2, ..., n}
-    '''
-    n_points = len(points)
-    distances = [
-        [metric(points[i], points[j]) for j in range(i+1, n_points)]
-        for i in range(n_points-1)
-    ]
-    return distances
+    Args:
+    points: array of points in the metric space. These can be of any type
+        as long as the metric is suitably defined to expect this type
+    metric: a distance function between points in the space. Expected to
+        take two points of the same type as in the points array and return
+        a float
+
+    Returns:
+        A one-dimensional array of all distances between all non-trivial
+        combinations of points in the array. Order of the distances is
+        inherited from the order returned by itertools.combinations(points, 2),
+        i.e. of the form [(x1, x2), (x1, x3), ..., (x2, x3), ...]
+
+    Length of the returned array is n(n-1)/2 where n = len(points)
+    """
+
+    return np.fromiter(
+        (metric(*comb) for comb in itertools.combinations(points, 2)),
+        dtype=np.float,
+        count=len(points) * (len(points) - 1) // 2,
+    )
 
 
-def make_similarities_matrix(points, metric, similarity, distances=None):
-    '''
-    Returns a np.array which has (i,j)-entry equal to the similarity of the
-    distance between point i and point j.
+def get_space_similarities(
+    points: np.ndarray,
+    metric: Callable[[Any, Any], np.float],
+    similarity: Callable[[np.float], np.float],
+) -> np.ndarray:
+    """
+    Compute all similarities between all points in a metric space apart
+    from the self-similarities
 
-    If distances is passed, the computation is not repeated, or if not already
-    computed this arg may be left as None.
-    '''
+    This function provides access to a the array of similarities without
+    needing to compute the distances array in memory if not separately required
+    or already computed
+
+    Args:
+    points: array of points in the metric space. These can be of any type
+        as long as the metric is suitably defined to expect this type
+    metric: a distance function between points in the space. Expected to
+        take two points of the same type as in the points array and return
+        a float
+    similarity: a unary function from np.float to np.float. Expected to be
+        a monotonically decreasing function such that larger distances
+        correspond to smaller similarities
+
+    Returns:
+        A one-dimensional array of all similarities between all non-trivial
+        combinations of points in the array. Order of the distances is inherited
+        from the order returned by itertools.combinations(points, 2), i.e. of the
+        form [(x1, x2), (x1, x3), ..., (x2, x3), ...].
+
+    Length of the returned array is n(n-1)/2 where n = len(points)
+    """
+
+    return np.fromiter(
+        (
+            similarity(metric(*comb))
+            for comb in itertools.combinations(points, 2)
+        ),
+        dtype=np.float,
+        count=len(points) * (len(points) - 1) // 2,
+    )
+
+
+def get_similarities_matrix(
+    points: np.ndarray,
+    metric: Callable[[Any, Any], np.float],
+    similarity: Callable[[np.float], np.float],
+    distances: Optional[np.ndarray] = None,
+    self_similarity_multiplier: Optional[float] = 0.1,
+) -> np.array:
+    """
+    Compute the matrix of similarities between points in a metric space.
+
+    Args:
+    points: array of points in the metric space. These can be of any type
+        as long as the metric is suitably defined to expect this type
+    metric: a distance function between points in the space. Expected to
+        take two points of the same type as in the points array and return
+        a float
+    similarity: a unary function from np.float to np.float. Expected to be
+        a monotonically decreasing function such that larger distances
+        correspond to smaller similarities
+    distances: allows the specification of the distances between
+        points in the space. Expected to be a np.ndarray of length n(n-1)/2
+        where n = len(points), the form returned by get_space_distances
+    self_similarity_multiplier: the similarity of a particle with itself is
+        set to self_similarity_multplier * min(similarities). Smaller values
+        encourage exploration away from self.
+
+    Returns:
+        2-dimensional np.ndarray which has (i,j)-entry equal to the similarity
+        of the distance between point i and point j.
+    """
+
     if distances is None:
-        distances = get_space_distances(points, metric)
+        similarities = get_space_similarities(points, metric, similarity)
 
-    W = np.empty((n_points, n_points))
+    else:
+        similarities = np.vectorize(similarity)(distances)
 
-    for i in range(n_points):
-        for j in range(i, n_points):
-            if i == j:
-                W[i][j] = 1
-            else:
-                distance = distances[i][j-i-1]
-                W[i][j] = similarity(distance)
-                W[j][i] = W[i][j]
+    # the similarity of a particle with itself is set to a multiple of
+    # the smallest similarity observed, specified by self_similarity_multiplier
+    self_similarity = min(similarities) * self_similarity_multiplier
+
+    similarities_matrix = np.zeros(shape=(len(points), len(points)))
+
+    upper_indices = np.triu_indices(len(points), 1)
+    diag_indices = np.diag_indices(len(points))
+
+    similarities_matrix[upper_indices] = similarities
+    similarities_matrix += similarities_matrix.T
+    similarities_matrix[diag_indices] = self_similarity
 
     # W is assumed to be full rank
-    if np.linalg.matrix_rank(W) != len(W):
-        print('WARN: Similarities matrix is not full rank')
+    if np.linalg.matrix_rank(similarities_matrix) != len(points):
+        print("WARN: Similarities matrix is not full rank")
 
-    return W
+    return similarities_matrix
 
 
-def K_prototypes(transition_matrix, prototypes_init):
-    '''
-    Finds the K-clustering of the points evolving under the
-    specified transition matrix, with initial prototypes
-    prototypes_init.
+def get_transition_matrix_from_similarities_matrix(
+    similarities_matrix: np.array,
+) -> np.array:
+    """
+    Compute a transition matrix from a matrix of similarities.
 
-    Algorithm 1 of the paper.
-    '''
+    Divide each row of the similarities matrix by the row sum to give
+    a transition matrix with each row representing a probability
+    distribution.
 
-    n_rows, n_cols = transition_matrix.shape
+    Implements equation (2) of the paper.
+
+    Args:
+    similarities_matrix: a 2-dimensional np.ndarray which has (i,j)-entry
+        equal to the similarity of the distance between point i and point j.
+        Of the form returned by get_similarities_matrix
+
+    Returns:
+        A 2-dimensional np.ndarray which has (i,j)-entry equal to the
+        transition probability from point X_i to X_j
+    """
+
+    row_sums = similarities_matrix.sum(axis=1)
+    transition_matrix = similarities_matrix / row_sums[:, np.newaxis]
+    return transition_matrix
+
+
+def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
+    """
+    Finds the K-clustering of the points evolving under the specified
+    transition matrix, with initial prototypes prototypes_init. K is
+    inferred from the length of the prototypes_init parameter
+
+    Args:
+    transition_matrix: a 2-dimensional np.ndarray which has (i,j)-entry
+        equal to the probability of transitioning from particle X_i to
+        particle X_j in the next time step
+    prototypes_init: a list of lists. The ith list is the indexes of
+        points which begin in partition i
+
+    Returns:
+        A list of lists representing the converged partition. The ith
+        element contains indices of the points which belong to the ith
+        partition
+
+    Implements Algorithm 1 of the paper
+    """
+
+    n_points = len(transition_matrix)
+    n_clusters = len(prototypes_init)
+
     prototypes = prototypes_init
-    previous_partition = None
+    previous_partition = list()
 
     while True:
-        partition = [[] for _ in range(len(prototypes))]
+        partition = [[] for _ in range(n_clusters)]
 
-        for row in range(n_rows):
+        for row in range(n_points):
             divergences = [
-                kl_divergence(
-                    transition_matrix[row],
-                    prototypes[k]
-                )
+                kl_divergence(transition_matrix[row], prototypes[k])
                 for k in range(n_clusters)
             ]
             closest_cluster = np.argmin(divergences)
             partition[closest_cluster].append(row)
 
-        new_prototypes = np.empty((n_clusters, n_cols))
+        new_prototypes = np.empty((n_clusters, n_points))
         for k in range(n_clusters):
-            # NB: Trying out a new method here of keeping old row if no partition elements
-            if partition[k]:
-                new_prototypes[k] = np.average(
-                    [transition_matrix[m] for m in partition[k]],
-                    axis = 1
-                )
-            else:
-                new_prototypes[k] = prototypes[k]
+            # TODO: How to deal with this if no elements of partition[k]?
+            # We could do something like the star-shaped init again actually ..
+            # Find a row which maximises the distance from the current
+            # prototypes
+            new_prototypes[k] = np.average(
+                [transition_matrix[m] for m in partition[k]], axis=0
+            )
 
-        if previous_partition is not None and set(previous_partition) == set(partition):
-            return partition, prototypes
+        if sorted(previous_partition) == sorted(partition):
+            return partition
 
         previous_partition = partition
         prototypes = new_prototypes
 
 
 def star_shaped_init(transition_matrix, n_clusters):
-    '''
-    Compute the "star-shaped" prototypes initialisation with
-    n_clusters clusters, where the points evolve according
-    to transition_matrix.
+    """
+    Compute the "star-shaped" prototypes initialisation with n_clusters
+    clusters, where the points evolve according to transition_matrix.
 
-    Algorithm 2 of the paper. We take the mean of the transition
-    matrix rows for the first prototype. The remaining rows
-    are chosen from the transition matrix so as to maximise the
-    minimum KL-divergence to the already-computed prototypes.
-    '''
+    We take the mean of the transition matrix rows for the first prototype.
+    The remaining rows are chosen from the transition matrix so as to maximise
+    the minimum KL-divergence to the already-computed prototypes.
+
+    Implements Algorithm 2 of the paper
+    """
 
     n_points = len(transition_matrix)
     prototypes = np.empty((n_clusters, n_points))
     prototypes[0] = np.average(
-        [transition_matrix[n] for n in range(n_points)],
-        axis = 1
+        [transition_matrix[n] for n in range(n_points)], axis=1
     )
 
     # Record which transition-matrix rows have been used as a prototype
     # already so as to avoid unncessary KL-divergence computation
-    row_numbers_used = set() 
-    
+    row_numbers_used = set()
+
     for k in range(1, n_clusters):
         min_divergences = []
 
@@ -149,10 +270,10 @@ def star_shaped_init(transition_matrix, n_clusters):
 
 
 def random_init(transition_matrix, n_clusters):
-    '''
+    """
     Compute a random initialisation of the n_clusters prototypes
     from the transition_matrix
-    '''
+    """
 
     n_points = len(transition_matrix)
     prototypes = np.empty((n_clusters, n_points))
@@ -164,46 +285,126 @@ def random_init(transition_matrix, n_clusters):
     return prototypes
 
 
-def delta_k_t(k, t, eigenvalues):
-    '''
-    Compute the t-th order eigengap between the kth and (k+1)th eigenvalue.
-    Equation 11 from the paper.
-    '''
-    if k < 0:
-        raise ValueError('Input k to delta_k_t() must be a positive integer')
-    if k >= len(eigenvalues)-1:
-        raise ValueError('Received an input k value to delta_k_t() larger than number of eigenvalues')
+def delta_k_t(
+    k_values: np.ndarray, t_values: np.ndarray, eigenvalues: np.ndarray
+) -> np.ndarray:
+    """
+    For each passed k, compute the t-th order k-eigengap.
+    Implements a vectorised version of Equation (11) of the paper.
 
-    this_evalue = eigenvalues[k]
-    next_evalue = eigenvalues[k+1]
+    Returns:
+        A two-dimensional numpy array with (i,j) entry equal to
+        delta_k(t), where:
+            k = k_values[i],
+            t = t_values[j]
+    """
 
-    return abs(this_evalue)**t - abs(next_evalue)**t
+    if isinstance(k_values, list):
+        k_values = np.array(k_values)
+    if isinstance(t_values, list):
+        t_values = np.array(t_values)
+    if isinstance(eigenvalues, list):
+        eigenvalues = np.array(eigenvalues)
+
+    if np.any(k_values < 0):
+        raise ValueError("Input k_values to delta_k_t must be positive")
+
+    if np.any(k_values >= len(eigenvalues) - 1):
+        raise ValueError(
+            f"Input k_values to delta_k_t must be <= {len(eigenvalues)-1}"
+        )
+
+    abs_evalues = abs(eigenvalues).reshape(-1, 1)
+
+    # k eigenvalues are at indexes 0, ..., k-1, so in 0-index convention,
+    # equation (11) reads abs(lambda_k-1)**t - abs(lambda_k)**t
+    lower_evalues = abs_evalues[k_values - 1]
+    upper_evalues = abs_evalues[k_values]
+
+    lower_evalues_matrix = np.tile(lower_evalues, (1, len(t_values)))
+    upper_evalues_matrix = np.tile(upper_evalues, (1, len(t_values)))
+
+    lower_power_matrix = lower_evalues_matrix ** t_values
+    upper_power_matrix = upper_evalues_matrix ** t_values
+
+    return lower_power_matrix - upper_power_matrix
 
 
-def maximal_eigengap(t, eigenvalues):
-    '''
-    Compute the maximal t-th order eigengap.
-    Equation 14 of the paper
-    '''
-    eigengaps = [
-        delta_k_t(k, t, eigenvalues)
-        for k in range(len(eigenvalues)-1)
-    ]
-    return max(eigengaps)
+def multiscale_k_prototypes(
+    transition_matrix: np.ndarray,
+    max_steps_power: np.ndarray,
+    max_clusters: Optional[np.int] = None,
+) -> List[Tuple]:
+    """
+    Suggest good partitions of the dataset, given the transition matrix
+    P of equation (2) of the paper.
 
+    Implements Algorithm 3 of the paper.
 
-def n_clusters_best_revealed(t, eigenvalues, max_clusters=None):
-    '''
-    Find the number of clusters best revealed by t steps.
-    Equation 15 of the paper.
-    '''
+    Args:
+    transition_matrix: N*N matrix with (i,j) entry equal to the
+        probability of moving from point i to point j in one
+        time step. As returned by get_transition_matrix_from_similarities_matrix
+    max_steps_power: The upper bound on the number of steps to consider in order
+        to find good partitions
+    max_clusters: An optional upper bound of the number of clusters in the
+        returned partitions
+
+    Returns:
+        List of tuples. Each tuple is of the form (partition, suitability), 
+        where partition is a list of lists containing the indices for each
+        cluster, and suitability is the associated eigengap separation value
+    """
+
     if max_clusters is None:
-        max_clusters = len(eigenvalues)-1
+        max_clusters = len(transition_matrix) - 2
 
-    delta_k_values = [
-        delta_k_t(k, t, eigenvalues)
-        for k in range(max_clusters)
-    ]
-    return np.argmax(delta_k_values) + 1
+    eigenvalues = np.linalg.eig(transition_matrix)[0]
+    sorting_indices = eigenvalues.argsort()[::-1]
+    eigenvalues = eigenvalues[sorting_indices]
 
+    k_values = np.arange(1, max_clusters + 1)
+    t_values = np.logspace(start=0, stop=max_steps_power, num=1000)
 
+    delta_k_t_values = delta_k_t(k_values, t_values, eigenvalues)
+    steps_to_best_reveal_indices = delta_k_t_values.argmax(axis=1)
+
+    considered_n_clusters = []
+
+    for k_idx, steps_to_best_reveal_k_idx in enumerate(
+        steps_to_best_reveal_indices
+    ):
+        # If k is the cluster best revealed by this number of steps
+        index_best_revealed = delta_k_t_values[
+            :, steps_to_best_reveal_k_idx
+        ].argmax(axis=0)
+
+        if index_best_revealed == k_idx:
+            k = k_values[k_idx]
+            steps_to_best_reveal_k = np.int(
+                t_values[steps_to_best_reveal_k_idx]
+            )
+            partition_suitability = delta_k_t_values[
+                k_idx, steps_to_best_reveal_k_idx
+            ]
+
+            considered_n_clusters.append(
+                (k, steps_to_best_reveal_k, partition_suitability)
+            )
+
+    suggested_clusters = []
+
+    for n_clusters, n_steps, partition_suitability in considered_n_clusters:
+        if n_clusters == 1:
+            continue
+
+        transition_matrix_power = np.linalg.matrix_power(
+            transition_matrix, n_steps
+        )
+
+        Q_init = star_shaped_init(transition_matrix_power, n_clusters)
+        partition = k_prototypes(transition_matrix_power, Q_init)
+
+        suggested_clusters.append((partition, partition_suitability))
+
+    return suggested_clusters

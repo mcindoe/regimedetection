@@ -13,7 +13,7 @@ def is_numpy(x):
     return type(x).__module__ == np.__name__
 
 
-def euclid_squared(a, b):
+def squared_euclidean_distance(a, b):
     '''Square of euclidean distance between two points in R^n, n >= 1'''
     # If a, b are scalars
     if is_numeric(a) and is_numeric(b):
@@ -22,20 +22,19 @@ def euclid_squared(a, b):
     # Else a, b are lists / numpy arrays
     else:
         if len(a) != len(b):
-            raise ValueError('Input lengths not equal in euclid_squared()')
+            raise ValueError('Input lengths not equal in squared_euclidean_distance()')
 
         if is_numpy(a) and is_numpy(b):
             distance = ((a-b)*(a-b)).sum()
         else:
-            distance = euclid_squared(np.array(a), np.array(b))
+            distance = squared_euclidean_distance(np.array(a), np.array(b))
 
     return distance
 
 
-def euclid_distance(a, b):
+def euclidean_distance(a, b):
     '''Euclidean distance between two points in R^n, n >= 1'''
-    squared_distance = euclid_squared(a, b)
-    return math.sqrt(squared_distance)
+    return math.sqrt(squared_euclidean_distance(a, b))
 
 
 def average_euclidean_distance(a, b):
@@ -52,7 +51,7 @@ def average_euclidean_distance(a, b):
     total = 0
     for a_el in a:
         for b_el in b:
-            total += euclid_distance(a_el, b_el)
+            total += euclidean_distance(a_el, b_el)
 
     n_combinations = len(a) * len(b)
     return total / n_combinations
