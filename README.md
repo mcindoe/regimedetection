@@ -5,6 +5,7 @@ Provides an implementation of the AG-Clustering algorithm. More examples to foll
 # Setup
 
 * `git pull` the repository to a folder named `regimedetection`
+    - `git pull https://github.com/mcindoe/RegimeDetection.git`
 * Add the `regimedetection` folder to your `PYTHONPATH` environment variable
     - I refer to modules as e.g. `from regimedetection.src.metrics import euclidean_distance`
     - Open to suggestions on how to better accomplish this
