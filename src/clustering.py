@@ -12,7 +12,9 @@ from regimedetection.src.metrics import kl_divergence
 
 from typing import Any
 from typing import Callable
+from typing import List
 from typing import Optional
+from typing import Tuple
 
 
 def get_space_distances(
