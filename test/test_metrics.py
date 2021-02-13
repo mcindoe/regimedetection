@@ -6,6 +6,7 @@ from pytest import approx
 from regimedetection.src.metrics import euclidean_distance
 from regimedetection.src.metrics import squared_euclidean_distance
 
+
 def test_squared_euclidean_distance():
     a = [3, 4, 5]
     b = [10, 5, 0]
@@ -39,4 +40,3 @@ def test_euclidean_distance():
     assert euclidean_distance(a, b) == approx(
         math.sqrt(squared_euclidean_distance(a, b))
     )
-

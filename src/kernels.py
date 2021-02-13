@@ -11,7 +11,7 @@ def make_laplacian_kernel(sigma):
             return 1
 
         squared_distance = euclid_squared(x, y)
-        power = -sigma*sigma*squared_distance
+        power = -sigma * sigma * squared_distance
         return exp(power)
 
     return k
@@ -23,4 +23,3 @@ def gaussian_kernel(x, y):
 
     dot_product = np.dot(x, y)
     return exp(dot_product)
-
