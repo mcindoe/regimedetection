@@ -3,15 +3,13 @@ import numpy as np
 from regimedetection.src.clustering import get_space_distances
 from regimedetection.src.clustering import get_space_similarities
 from regimedetection.src.clustering import get_similarities_matrix
-from regimedetection.src.similarities import inverse
-from regimedetection.src.similarities import inverse_squared
 from regimedetection.src.similarities import make_gaussian_similarity
 from regimedetection.src.metrics import euclidean_distance
 from regimedetection.src.metrics import squared_euclidean_distance
 
 # metrics used to test get_space_distances() and get_space_similarities()
 tested_metrics = [euclidean_distance, squared_euclidean_distance]
-tested_similarities = [inverse, inverse_squared, make_gaussian_similarity(2)]
+tested_similarities = [make_gaussian_similarity(2)]
 tested_points = np.array([[0, 1], [3, 3], [5, 2], [2.34, 4.32], [-1.44, 9.51]])
 
 
