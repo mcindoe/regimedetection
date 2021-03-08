@@ -15,3 +15,7 @@ Provides an implementation of the AG-Clustering algorithm. More examples to foll
 # Some Open Issues
 
 1. In K-Prototypes algorithm, what are we to do if one of the partitions is empty? E.g. if kth cluster is entry, what is `new-prototypes[k]`? I suppose this comes up in K-means clustering as well. Currently I'm leaving the partition unchanged.
+
+# Coding Standards
+
+* Currently using `Black` with a line length of 100, since I find the 79 limit too limiting

@@ -17,9 +17,7 @@ from typing import Optional
 from typing import Tuple
 
 
-def get_space_distances(
-    points: np.ndarray, metric: Callable[[Any, Any], np.float]
-) -> np.ndarray:
+def get_space_distances(points: np.ndarray, metric: Callable[[Any, Any], np.float]) -> np.ndarray:
     """
     Compute all non-trivial distances between all points in a metric
     space. I.e. all distances except those of the form d(x,x) which is 0
@@ -81,10 +79,7 @@ def get_space_similarities(
     """
 
     return np.fromiter(
-        (
-            similarity(metric(*comb))
-            for comb in itertools.combinations(points, 2)
-        ),
+        (similarity(metric(*comb)) for comb in itertools.combinations(points, 2)),
         dtype=np.float,
         count=len(points) * (len(points) - 1) // 2,
     )
@@ -206,8 +201,7 @@ def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
 
         for row in range(n_points):
             divergences = [
-                kl_divergence(transition_matrix[row], prototypes[k])
-                for k in range(n_clusters)
+                kl_divergence(transition_matrix[row], prototypes[k]) for k in range(n_clusters)
             ]
             closest_cluster = np.argmin(divergences)
             partition[closest_cluster].append(row)
@@ -218,9 +212,7 @@ def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
             # We could do something like the star-shaped init again actually ..
             # Find a row which maximises the distance from the current
             # prototypes
-            new_prototypes[k] = np.average(
-                [transition_matrix[m] for m in partition[k]], axis=0
-            )
+            new_prototypes[k] = np.average([transition_matrix[m] for m in partition[k]], axis=0)
 
         if sorted(previous_partition) == sorted(partition):
             return partition
@@ -243,9 +235,7 @@ def star_shaped_init(transition_matrix, n_clusters):
 
     n_points = len(transition_matrix)
     prototypes = np.empty((n_clusters, n_points))
-    prototypes[0] = np.average(
-        [transition_matrix[n] for n in range(n_points)], axis=1
-    )
+    prototypes[0] = np.average([transition_matrix[n] for n in range(n_points)], axis=1)
 
     # Record which transition-matrix rows have been used as a prototype
     # already so as to avoid unncessary KL-divergence computation
@@ -258,10 +248,7 @@ def star_shaped_init(transition_matrix, n_clusters):
             if n in row_numbers_used:
                 min_divergences.append(0)
             else:
-                divergences = [
-                    kl_divergence(transition_matrix[n], prototypes[j])
-                    for j in range(k)
-                ]
+                divergences = [kl_divergence(transition_matrix[n], prototypes[j]) for j in range(k)]
                 min_divergences.append(min(divergences))
 
         z = np.argmax(min_divergences)
@@ -287,9 +274,7 @@ def random_init(transition_matrix, n_clusters):
     return prototypes
 
 
-def delta_k_t(
-    k_values: np.ndarray, t_values: np.ndarray, eigenvalues: np.ndarray
-) -> np.ndarray:
+def delta_k_t(k_values: np.ndarray, t_values: np.ndarray, eigenvalues: np.ndarray) -> np.ndarray:
     """
     For each passed k, compute the t-th order k-eigengap.
     Implements a vectorised version of Equation (11) of the paper.
@@ -312,9 +297,7 @@ def delta_k_t(
         raise ValueError("Input k_values to delta_k_t must be positive")
 
     if np.any(k_values >= len(eigenvalues) - 1):
-        raise ValueError(
-            f"Input k_values to delta_k_t must be <= {len(eigenvalues)-1}"
-        )
+        raise ValueError(f"Input k_values to delta_k_t must be <= {len(eigenvalues)-1}")
 
     abs_evalues = abs(eigenvalues).reshape(-1, 1)
 
@@ -353,7 +336,7 @@ def multiscale_k_prototypes(
         returned partitions
 
     Returns:
-        List of tuples. Each tuple is of the form (partition, suitability), 
+        List of tuples. Each tuple is of the form (partition, suitability),
         where partition is a list of lists containing the indices for each
         cluster, and suitability is the associated eigengap separation value
     """
@@ -373,26 +356,16 @@ def multiscale_k_prototypes(
 
     considered_n_clusters = []
 
-    for k_idx, steps_to_best_reveal_k_idx in enumerate(
-        steps_to_best_reveal_indices
-    ):
+    for k_idx, steps_to_best_reveal_k_idx in enumerate(steps_to_best_reveal_indices):
         # If k is the cluster best revealed by this number of steps
-        index_best_revealed = delta_k_t_values[
-            :, steps_to_best_reveal_k_idx
-        ].argmax(axis=0)
+        index_best_revealed = delta_k_t_values[:, steps_to_best_reveal_k_idx].argmax(axis=0)
 
         if index_best_revealed == k_idx:
             k = k_values[k_idx]
-            steps_to_best_reveal_k = np.int(
-                t_values[steps_to_best_reveal_k_idx]
-            )
-            partition_suitability = delta_k_t_values[
-                k_idx, steps_to_best_reveal_k_idx
-            ]
+            steps_to_best_reveal_k = np.int(t_values[steps_to_best_reveal_k_idx])
+            partition_suitability = delta_k_t_values[k_idx, steps_to_best_reveal_k_idx]
 
-            considered_n_clusters.append(
-                (k, steps_to_best_reveal_k, partition_suitability)
-            )
+            considered_n_clusters.append((k, steps_to_best_reveal_k, partition_suitability))
 
     suggested_clusters = []
 
@@ -400,9 +373,7 @@ def multiscale_k_prototypes(
         if n_clusters == 1:
             continue
 
-        transition_matrix_power = np.linalg.matrix_power(
-            transition_matrix, n_steps
-        )
+        transition_matrix_power = np.linalg.matrix_power(transition_matrix, n_steps)
 
         Q_init = star_shaped_init(transition_matrix_power, n_clusters)
         partition = k_prototypes(transition_matrix_power, Q_init)

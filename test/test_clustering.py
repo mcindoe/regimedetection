@@ -39,20 +39,14 @@ def test_get_space_similarities():
 
     for metric in tested_metrics:
         for similarity in tested_similarities:
-            expected = get_expected_space_similarities(
-                tested_points, metric, similarity
-            )
-            observed = get_space_similarities(
-                tested_points, metric, similarity
-            )
+            expected = get_expected_space_similarities(tested_points, metric, similarity)
+            observed = get_space_similarities(tested_points, metric, similarity)
 
             assert np.isclose(expected, observed).all()
 
 
 def test_get_similarities_matrix():
-    def get_expected_similarities_matrix(
-        points, metric, similarity, self_similarity_multiplier
-    ):
+    def get_expected_similarities_matrix(points, metric, similarity, self_similarity_multiplier):
         n_points = len(points)
         similarities_matrix = np.empty((n_points, n_points))
 
@@ -64,9 +58,7 @@ def test_get_similarities_matrix():
                 if i == j:
                     similarities_matrix[i, j] = self_similarity
                 else:
-                    similarities_matrix[i, j] = similarity(
-                        metric(points[i], points[j])
-                    )
+                    similarities_matrix[i, j] = similarity(metric(points[i], points[j]))
 
         return similarities_matrix
 

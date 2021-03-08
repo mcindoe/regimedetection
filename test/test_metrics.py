@@ -14,12 +14,8 @@ def test_squared_euclidean_distance():
     assert squared_euclidean_distance(a, a) == approx(0)
     assert squared_euclidean_distance(a, b) == approx(75)
 
-    assert squared_euclidean_distance(a, b) == squared_euclidean_distance(
-        a, np.array(b)
-    )
-    assert squared_euclidean_distance(a, b) == squared_euclidean_distance(
-        a, tuple(b)
-    )
+    assert squared_euclidean_distance(a, b) == squared_euclidean_distance(a, np.array(b))
+    assert squared_euclidean_distance(a, b) == squared_euclidean_distance(a, tuple(b))
 
     with pytest.raises(ValueError):
         squared_euclidean_distance(a, str(a))
@@ -37,6 +33,4 @@ def test_euclidean_distance():
     a = [1, 2, 3, 4]
     b = [6, 12, 18, 24]
 
-    assert euclidean_distance(a, b) == approx(
-        math.sqrt(squared_euclidean_distance(a, b))
-    )
+    assert euclidean_distance(a, b) == approx(math.sqrt(squared_euclidean_distance(a, b)))

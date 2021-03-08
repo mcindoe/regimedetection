@@ -22,9 +22,7 @@ def squared_euclidean_distance(a, b):
     # Else a, b are lists / numpy arrays
     else:
         if len(a) != len(b):
-            raise ValueError(
-                "Input lengths not equal in squared_euclidean_distance()"
-            )
+            raise ValueError("Input lengths not equal in squared_euclidean_distance()")
 
         if is_numpy(a) and is_numpy(b):
             distance = ((a - b) * (a - b)).sum()
@@ -69,9 +67,7 @@ def sum_of_all_kernel_vals(kernel, collection):
     collection: collection of points
     """
 
-    assert (
-        len(collection) > 0
-    ), "Require a non-empty collection in sum_kernels()"
+    assert len(collection) > 0, "Require a non-empty collection in sum_kernels()"
 
     ret = 0
 
