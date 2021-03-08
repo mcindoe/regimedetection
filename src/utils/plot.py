@@ -1,3 +1,5 @@
+import random
+
 PALETTE = [
     "#7F2CCB",
     "#98473E",
