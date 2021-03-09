@@ -6,6 +6,7 @@ Functions provided here should be non-negative, monotonically
 decreasing functions
 """
 
+import math
 import numpy as np
 
 
@@ -13,7 +14,7 @@ def make_gaussian_similarity(sigma):
     sigma_squared = sigma * sigma
 
     def gaussian_similarity(x):
-        return np.exp(-x / sigma_squared)
+        return math.exp(-x / sigma_squared)
 
     return gaussian_similarity
 
