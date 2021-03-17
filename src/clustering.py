@@ -199,29 +199,70 @@ def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
     while True:
         partition = [[] for _ in range(n_clusters)]
 
-        for row in range(n_points):
-            divergences = [
-                kl_divergence(transition_matrix[row], prototypes[k]) for k in range(n_clusters)
-            ]
-            closest_cluster = np.argmin(divergences)
-            partition[closest_cluster].append(row)
+        # Compute KL-divergence from each row to each cluster centre
+        divergences = kl_divergence(
+            np.repeat(transition_matrix, len(prototypes), axis=0),
+            np.tile(prototypes, reps=(len(transition_matrix), 1)),
+        )
+        divergences = np.split(divergences, len(transition_matrix))
+        closest_clusters = np.argmin(divergences, axis=1)
 
         new_prototypes = np.empty((n_clusters, n_points))
         for k in range(n_clusters):
-            # TODO: How to deal with this if no elements of partition[k]?
-            # We could do something like the star-shaped init again actually ..
-            # Find a row which maximises the distance from the current
-            # prototypes
-            new_prototypes[k] = np.average([transition_matrix[m] for m in partition[k]], axis=0)
+            partition[k] = list(np.where(closest_clusters == k)[0])
 
-        if sorted(previous_partition) == sorted(partition):
+            if partition[k]:
+                new_prototypes[k] = np.average(transition_matrix[partition[k]], axis=0)
+
+        # If we have an empty cluster in new_prototypes, perform star-shaped initialisation
+        # and overwrite corresponding prototype
+        if any(len(cluster) == 0 for cluster in partition):
+            empty_cluster_indices = tuple(
+                idx for idx, cluster in enumerate(partition) if len(cluster) == 0
+            )
+
+            non_empty_cluster_indices = list(
+                set(range(n_clusters)).difference(set(empty_cluster_indices))
+            )
+
+            existing_prototypes = new_prototypes[non_empty_cluster_indices]
+
+            for cluster_idx in empty_cluster_indices:
+                # Find the transition matrix prototype which is furthest away (wrt KL-divergence)
+                # from all currently-used prototypes
+                divergences = kl_divergence(
+                    np.repeat(transition_matrix, len(existing_prototypes), axis=0),
+                    np.tile(existing_prototypes, reps=(len(transition_matrix), 1)),
+                )
+                divergences = np.array(np.split(divergences, len(transition_matrix)))
+                min_divergences = divergences.min(axis=1)
+
+                # Choose the row from the transition matrix with maximal min-divergence
+                chosen_prototype_idx = np.argmax(min_divergences)
+
+                chosen_prototype = transition_matrix[chosen_prototype_idx]
+                new_prototypes[cluster_idx] = chosen_prototype
+
+                # Update partition to include the corresponding point as a singleton cluster
+                for cluster in partition:
+                    if chosen_prototype_idx in cluster:
+                        cluster.remove(chosen_prototype_idx)
+
+                partition[cluster_idx] = [chosen_prototype_idx]
+
+                existing_prototypes = np.append(
+                    existing_prototypes, chosen_prototype.reshape(1, -1), axis=0
+                )
+
+        # If no empty clusters and the cluster has not changed, steady-state has been reached
+        elif sorted(previous_partition) == sorted(partition):
             return partition
 
         previous_partition = partition
         prototypes = new_prototypes
 
 
-def star_shaped_init(transition_matrix, n_clusters):
+def star_shaped_init(transition_matrix: np.ndarray, n_clusters: int) -> np.ndarray:
     """
     Compute the "star-shaped" prototypes initialisation with n_clusters
     clusters, where the points evolve according to transition_matrix.
@@ -242,14 +283,15 @@ def star_shaped_init(transition_matrix, n_clusters):
     row_numbers_used = set()
 
     for k in range(1, n_clusters):
-        min_divergences = []
+        min_divergences = np.empty(shape=(n_points))
 
         for n in range(n_points):
             if n in row_numbers_used:
-                min_divergences.append(0)
+                min_divergences[n] = 0
             else:
-                divergences = [kl_divergence(transition_matrix[n], prototypes[j]) for j in range(k)]
-                min_divergences.append(min(divergences))
+                previous_prototypes = transition_matrix[:k]
+                divergences = kl_divergence(transition_matrix[n], previous_prototypes)
+                min_divergences[n] = divergences.min()
 
         z = np.argmax(min_divergences)
         prototypes[k] = transition_matrix[z]
@@ -258,7 +300,7 @@ def star_shaped_init(transition_matrix, n_clusters):
     return prototypes
 
 
-def random_init(transition_matrix, n_clusters):
+def random_init(transition_matrix: np.ndarray, n_clusters: int) -> np.ndarray:
     """
     Compute a random initialisation of the n_clusters prototypes
     from the transition_matrix
