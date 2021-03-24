@@ -107,12 +107,40 @@ def make_mmd_metric(kernel):
     return f
 
 
-def kl_divergence(a, b):
-    """Return the KL-divergence from b to a"""
-    if len(a) != len(b):
+def kl_divergence(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """
+    Vectorised KL-divergence computations from vectors in b
+    to vectors in a.
+
+    a, b should be numpy arrays of the same shape. Returned value
+    is a length-N 1-dimensional numpy array where N is the number
+    of rows in the input arrays. The ith entry in the returned
+    array is the KL-divergence from b[i] to a[i].
+    """
+
+    # If one of the inputs is one-dimensional, and the other is two-dimensional,
+    # then tile the one-dimensional array into a 2-dimensional array of appropriate size
+    if a.ndim == 1 and b.ndim == 2:
+        a = np.tile(a, reps=(len(b), 1))
+
+    elif a.ndim == 2 and b.ndim == 1:
+        b = np.tile(b, reps=(len(a), 1))
+
+    # Otherwise, if one-dimensional inputs are provided, reshape as 2-dimensional arrays
+    if a.ndim == 1:
+        a = a.reshape(1, -1)
+
+    if b.ndim == 1:
+        b = b.reshape(1, -1)
+
+    # a and b should now be two-dimensional arrays of the same size if appropriate
+    # inputs were provided
+    if a.ndim != 2 or b.ndim != 2:
         raise ValueError(
-            f"Expected inputs to kl_divergence to be of the same length, "
-            "got {len(a)} and {len(b)}"
+            "Inputs to kl_divergence should be 1- or 2-dimensional arrays"
         )
 
-    return (a * np.log(a / b)).sum()
+    if a.shape != b.shape:
+        raise ValueError("Inputs to kl_divergence to not have appropriate shapes")
+
+    return (a * np.log(a / b)).sum(axis=1)
