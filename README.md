@@ -1,6 +1,6 @@
 # Regime Detection
 
-Provides an implementation of the AG-Clustering algorithm. More examples to follow shortly.
+Provides an implementation of the Azran-Ghahramani clustering algorithm, as detailed in the paper *A New Approach to Data-Driven Clustering* (see references), as well as some examples in both non-financial and financial settings, as detiled in *Our Paper* (to be named)
 
 # Setup
 
