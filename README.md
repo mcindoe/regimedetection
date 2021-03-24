@@ -6,7 +6,6 @@ Provides an implementation of the Azran-Ghahramani clustering algorithm, as deta
 
 * `git clone` the repository to a folder named `regimedetection`
     - `git clone https://github.com/mcindoe/RegimeDetection.git`
-    - `mv RegimeDetection regimedetection`
 * Add the `regimedetection` folder to your `PYTHONPATH` environment variable
     - I refer to modules as e.g. `from regimedetection.src.metrics import euclidean_distance`
     - Open to suggestions on how to better accomplish this
