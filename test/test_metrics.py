@@ -79,7 +79,7 @@ def test_kl_divergence():
     tiled_computation_2 = kl_divergence(np.tile(a[0], reps=(len(b), 1)), b)
     assert np.allclose(non_tiled_computation_2, tiled_computation_2)
 
-    # Check that non-appropriate shapes are handled correctly
+    # Check that inappropriate shapes are handled correctly
     with pytest.raises(ValueError):
         kl_divergence(a, b[:2])
 
