@@ -25,6 +25,10 @@ Provides an implementation of the AG-Clustering algorithm. More examples to foll
 
 * Currently using `Black` with a line length of 100, since I find the 79 limit too limiting
 
-# Some Open Issues
+# On Empty Partitions in Multiscale-K-Prototypes
 
-1. In K-Prototypes algorithm, what are we to do if one of the partitions is empty? E.g. if kth cluster is entry, what is `new-prototypes[k]`? I suppose this comes up in K-means clustering as well. Currently I'm leaving the partition unchanged.
+This was not mentioned in the paper by Azran & Ghahramani:
+
+In the multiscale-k-prototypes algorithm, at each iteration the current cluster elements are used to determine the cluster centres in the next iteration. If, however, a given cluster is empty, it is not clear what to do. The solution implemented here is to do a *star-shaped-init* style solution. That is, from the collection of prototypes corresponding to all points in the space, we choose the prototype which has maximal KL-divergence from the cluster centres which are already defined in terms of averages of constituent element's prototypes. This is repeated until a prototype is assigned to each cluster index for the next iteration.
+
+Note that this means that in the next iteration, the cluster with a *manually-assigned* cluster centre is guaranteed to have at least one element, since there is an element of the space with zero KL-divergence to the cluster centre.
