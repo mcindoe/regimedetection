@@ -250,9 +250,11 @@ def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
 
                 partition[cluster_idx] = [chosen_prototype_idx]
 
-                existing_prototypes = np.append(
-                    existing_prototypes, chosen_prototype.reshape(1, -1), axis=0
-                )
+                # If there is another iteration to perform, update the existing_prototypes arr
+                if cluster_idx != empty_cluster_indices[-1]:
+                    existing_prototypes = np.append(
+                        existing_prototypes, chosen_prototype.reshape(1, -1), axis=0
+                    )
 
         # If no empty clusters and the cluster has not changed, steady-state has been reached
         elif sorted(previous_partition) == sorted(partition):
