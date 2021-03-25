@@ -243,13 +243,6 @@ def k_prototypes(transition_matrix: np.array, prototypes_init: np.array):
                 chosen_prototype = transition_matrix[chosen_prototype_idx]
                 new_prototypes[cluster_idx] = chosen_prototype
 
-                # Update partition to include the corresponding point as a singleton cluster
-                for cluster in partition:
-                    if chosen_prototype_idx in cluster:
-                        cluster.remove(chosen_prototype_idx)
-
-                partition[cluster_idx] = [chosen_prototype_idx]
-
                 # If there is another iteration to perform, update the existing_prototypes arr
                 if cluster_idx != empty_cluster_indices[-1]:
                     existing_prototypes = np.append(
