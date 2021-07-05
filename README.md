@@ -1,6 +1,6 @@
 # Regime Detection
 
-Provides an implementation of the Azran-Ghahramani clustering algorithm, as detailed in the paper *A New Approach to Data-Driven Clustering* (see references, referred to as *The AG-Paper*), as well as some examples in both non-financial and financial settings, as detiled in [Market Regime Classification with Signatures](https://arxiv.org/abs/2107.00066)
+Provides an implementation of the Azran-Ghahramani clustering algorithm, as detailed in the paper *A New Approach to Data-Driven Clustering* (see references, referred to as *The AG-Paper*), as well as some examples in both non-financial and financial settings, as detailed in [Market Regime Classification with Signatures](https://arxiv.org/abs/2107.00066)
 
 # Setup
 
