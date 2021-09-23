@@ -13,14 +13,14 @@ Provides an implementation of the Azran-Ghahramani clustering algorithm, as deta
 
 This repository makes use of the [signatory](https://github.com/patrick-kidger/signatory) package, which must be installed after [PyTorch](https://pytorch.org/), and the version must be selected with reference to the installed PyTorch version.
 
-At the time of writing, signatory's [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html) inform the reader that signatory is supported for Python 3.6-3.9 and PyTorch versions 1.6.0-1.9.0. Signatory must also be installed after PyTorch. All packages other than PyTorch and signatory may be installed in any order, and later versions of these will likely not cause any issues.
+At the time of writing, signatory's [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html) informs the reader that signatory is supported for Python 3.6-3.9 and PyTorch versions 1.6.0-1.9.0. Signatory must also be installed after PyTorch. All packages other than PyTorch and signatory may be installed in any order, and later versions of these will likely not cause any issues.
 
-The following steps may be used to set up the repository on a Linux machine. Instructions for other operating systems will shortly be added.
+The following steps may be used to set up the repository on a Linux machine. Instructions for other operating systems will be added shortly.
 
-* `git clone` the repository: `git clone https://github.com/mcindoe/regimedetection.git`
-* Make the file executable: `chmod +x install.sh`
-* Run the `install.sh` script to install the tested versions of the packages in the required order. 
-* Add the parent directory of this `regimedetection` repository to the `PYTHONPATH` environment variable
+1. `git clone` the repository: `git clone https://github.com/mcindoe/regimedetection.git`
+2. Make the installation script executable: `chmod +x install.sh`
+3. Run the `install.sh` installation script to install the packages in the required order
+4. Add the parent directory of this `regimedetection` repository to the `PYTHONPATH` environment variable
     - This allows imports such as e.g. `from regimedetection.src.metrics import euclidean_distance` to work from any working directory
     - In MacOS / Linux, add `export PYTHONPATH=$PYTHONPATH:/path/to/parent/dir` in your shell's config file, e.g. `~/.bashrc` if using bash, or `~/.zshrc` if using zsh.
 
