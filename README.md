@@ -4,30 +4,30 @@ Provides an implementation of the Azran-Ghahramani clustering algorithm, as deta
 
 # Setup
 
-* `git clone` the repository to a folder named `regimedetection`
-    - `git clone https://github.com/mcindoe/regimedetection.git`
-* Add the `regimedetection` folder to your `PYTHONPATH` environment variable
-    - I refer to modules as e.g. `from regimedetection.src.metrics import euclidean_distance`
-    - Open to suggestions on how to better accomplish this
-* Create a new virtual environment and `pip install -r requirements.txt`
+## TL;DR
 
-* The `signatory` package is tricky to get installed. For full instructions, see the [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html). This project uses:
-    * Python 3.8.8 (may be [installed from source](https://www.python.org/downloads/release/python-388/), or alternatively consider `pyenv` or the `conda` implementation). At the time of writing, `signatory` only supports Python 3.6, 3.7 or 3.8
-    * `PyTorch 1.7.1` (again, only specific versions of `PyTorch` play nicely with `signatory`)
-    * `signatory v1.2.4`. See the [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html), although the following command should suffice:
-        - `pip install signatory==<SIGNATORY_VERSION>.<TORCH_VERSION> --no-cache-dir --force-reinstall`
-        - `pip install signatory==1.2.4.1.7.1 --no-cache-dir --force-reinstall`
-        - Explanations for this command may be found in the installations instruction page
-        - This must be installed after `PyTorch`, hence it is not included in the `requirements.txt`
+* Run `install.sh` in the home directory in a new Python [virtual environment](https://www.section.io/engineering-education/introduction-to-virtual-environments-and-dependency-managers/) with Python 3.9 (or check the full instructions below to see if newer Python versions are now supported)
+* Add the project's root directory to Path or `PYTHONPATH`
 
-# Coding Standards
+## Instructions
 
-* Currently using `Black` with a line length of 100, since I find the 79 limit too limiting
+This repository makes use of the [signatory](https://github.com/patrick-kidger/signatory) package, which must be installed after [PyTorch](https://pytorch.org/), and the version must be selected with reference to the installed PyTorch version.
+
+At the time of writing, signatory's [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html) inform the reader that signatory is supported for Python 3.6-3.9 and PyTorch versions 1.6.0-1.9.0. Signatory must also be installed after PyTorch. All packages other than PyTorch and signatory may be installed in any order, and later versions of these will likely not cause any issues.
+
+The following steps may be used to set up the repository on a Linux machine. Instructions for other operating systems will shortly be added.
+
+* `git clone` the repository: `git clone https://github.com/mcindoe/regimedetection.git`
+* Make the file executable: `chmod +x install.sh`
+* Run the `install.sh` script to install the tested versions of the packages in the required order. 
+* Add the parent directory of this `regimedetection` repository to the `PYTHONPATH` environment variable
+    - This allows imports such as e.g. `from regimedetection.src.metrics import euclidean_distance` to work from any working directory
+    - In MacOS / Linux, add `export PYTHONPATH=$PYTHONPATH:/path/to/parent/dir` in your shell's config file, e.g. `~/.bashrc` if using bash, or `~/.zshrc` if using zsh.
 
 # On Empty Partitions in Multiscale-K-Prototypes
-
-This was not mentioned in the paper by Azran & Ghahramani:
 
 In the multiscale-k-prototypes algorithm, at each iteration the current cluster elements are used to determine the cluster centres in the next iteration. If, however, a given cluster is empty, it is not clear what to do. The solution implemented here is to do a *star-shaped-init* style solution (see Section 4.2 and Algorithm 2 of The AG-Paper). That is, from the collection of prototypes corresponding to all points in the space, we choose the prototype which has maximal KL-divergence from the already-assigned cluster centres. This is repeated until a prototype is assigned to each cluster index for the next iteration.
 
 Note that this means that in the next iteration, the cluster with a *manually-assigned* cluster centre is guaranteed to have at least one element, since there is an element of the space with zero KL-divergence to the cluster centre.
+
+This approach is briefly mentioned in [our preprint](https://arxiv.org/abs/2107.00066), but it is worth being aware of.
