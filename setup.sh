@@ -77,3 +77,6 @@ pip install typing-extensions==3.10.0.2
 pip install wcwidth==0.2.5
 pip install webencodings==0.5.1
 pip install widgetsnbextension==3.5.1
+
+# install jupyter kernel
+python -m ipykernel install --user --name=regimedetection
