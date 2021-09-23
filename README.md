@@ -6,7 +6,8 @@ Provides an implementation of the Azran-Ghahramani clustering algorithm, as deta
 
 ## TL;DR (Condensed and Less Helpful Instructions)
 
-* Run `setup.sh` in the home directory in a new Python [virtual environment](https://www.section.io/engineering-education/introduction-to-virtual-environments-and-dependency-managers/) with Python 3.9 (or check the full instructions below to see if newer Python versions are now supported)
+* Create a new Python [virtual environment](https://www.section.io/engineering-education/introduction-to-virtual-environments-and-dependency-managers/) running Python 3.9 (or check the full instructions below to see if newer Python versions are now supported)
+* Run the `setup.sh` installation script (you may need to make it executable first)
 * Add the parent of the project's root directory to Path or `PYTHONPATH` (so that `from regimedetection.module import function` runs from any script)
 
 ## Instructions
