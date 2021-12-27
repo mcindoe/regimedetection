@@ -16,6 +16,8 @@ This repository makes use of the [signatory](https://github.com/patrick-kidger/s
 
 At the time of writing, signatory's [installation guide](https://signatory.readthedocs.io/en/latest/pages/usage/installation.html) informs the reader that signatory is supported for Python 3.6-3.9 and PyTorch versions 1.6.0-1.9.0. Signatory must also be installed after PyTorch. All packages other than PyTorch and signatory may be installed in any order, and later versions of these will likely not cause any issues.
 
+PyTorch may not be available for the most recent Python release. It is recommended first to download Python 3.9 (this project was built with Python 3.9.9). You may find `pyenv` a useful tool here, which allows you to compile legacy Python versions in your user space. Then create a virtual environment and use this Python 3.9 executable. If you are using `virtualenvwrapper`, this is a simple as `mkvirtualenv -p /path/to/python3.9 regimedetection`.
+
 The following steps may be used to set up the repository on a Linux machine. Instructions for other operating systems will be added shortly.
 
 1. `git clone` the repository: `git clone https://github.com/mcindoe/regimedetection.git`
